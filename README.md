@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MediDispense Admin (Next.js)
 
-## Getting Started
+Hospital admin dashboard for the IoT-Based Automated Medicine Dispensing
+Conveyor System project. Talks to the FastAPI backend in `../backend` over
+REST + WebSocket.
 
-First, run the development server:
+## Quickstart
+
+Make sure the backend is running first (see `../backend/README.md`), then:
 
 ```bash
+cd admin-web
+npm install
+cp .env.example .env.local   # defaults already point at http://localhost:8000
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 — you'll land on `/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Default seed login (created automatically by the backend on first run):
+**admin@medidispense.com / admin123**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Only accounts with the `admin` role can sign into this site — doctors,
+nurses, pharmacists, and technicians use the Android app instead.
 
-## Learn More
+## Pages
 
-To learn more about Next.js, take a look at the following resources:
+- `/login` — admin sign-in
+- `/dashboard` — live tiles (active deliveries, open alerts, conveyor status,
+  today's count) + a conveyor simulator panel standing in for the real
+  ESP32/IR-sensor hardware
+- `/patients` — register patients, view/print their QR code
+- `/users` — create/remove doctor/nurse/pharmacist/technician/admin accounts
+- `/prescriptions` — every prescription + its delivery pipeline, expandable
+  to see the full stage-by-stage timeline
+- `/alerts` — medicine-mismatch and conveyor-failure alerts, acknowledge/resolve
+- `/reports` — deliveries/day and alerts-by-type charts (recharts)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Live updates
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The dashboard, alerts, and prescriptions pages subscribe to the backend's
+`/ws/conveyor`, `/ws/alerts`, and `/ws/prescriptions` WebSocket channels
+(see `src/lib/use-live-channel.ts`) and refetch the relevant data the moment
+the backend broadcasts an event — no polling.
 
-## Deploy on Vercel
+## Build
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build
+npm run start
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+
+- Auth: JWT from `/auth/login` is stored in `localStorage` and attached to
+  every API request via an axios interceptor (`src/lib/api.ts`). This is an
+  MVP choice; for a hardened deployment, move to an httpOnly cookie set by a
+  Next.js route handler instead.
+- Two ESLint rules (`react-hooks/set-state-in-effect`, `react-hooks/refs`)
+  are downgraded to warnings in `eslint.config.mjs` — they're new
+  React-Compiler-prep rules that flag the plain fetch-in-effect and
+  ref-holds-latest-callback patterns used throughout this app.
