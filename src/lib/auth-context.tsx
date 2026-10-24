@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { useRouter } from "next/navigation";
 
 import { api, getToken, setToken } from "./api";
-import type { TokenResponse, UserRole } from "./types";
+import type { PatientSignupRequest, TokenResponse, UserRole } from "./types";
 
 interface AuthUser {
   id: string;
@@ -16,12 +16,27 @@ interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (payload: PatientSignupRequest) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const USER_KEY = "medidispense_user";
+
+/**
+ * Where each role lands right after signing in (or after ProtectedPage sends
+ * someone away from a page their role can't see). Pharmacist and nurse have
+ * no dedicated pages built yet in this pass, so they land on /dashboard.
+ */
+export const ROLE_HOME: Record<UserRole, string> = {
+  admin: "/dashboard",
+  doctor: "/doctor",
+  technician: "/technician",
+  nurse: "/dashboard",
+  pharmacist: "/dashboard",
+  patient: "/patient",
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -41,20 +56,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const res = await api.post<TokenResponse>("/auth/login", { email, password });
-      const data = res.data;
-      if (data.role !== "admin") {
-        throw new Error("This portal is for hospital admins only. Ask an admin to add your account.");
-      }
+  const applySession = useCallback(
+    (data: TokenResponse) => {
       setToken(data.access_token);
       const authUser: AuthUser = { id: data.user_id, name: data.name, role: data.role };
       window.localStorage.setItem(USER_KEY, JSON.stringify(authUser));
       setUser(authUser);
-      router.push("/dashboard");
+      router.push(ROLE_HOME[data.role] ?? "/dashboard");
     },
     [router],
+  );
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const res = await api.post<TokenResponse>("/auth/login", { email, password });
+      applySession(res.data);
+    },
+    [applySession],
+  );
+
+  const signup = useCallback(
+    async (payload: PatientSignupRequest) => {
+      const res = await api.post<TokenResponse>("/auth/signup/patient", payload);
+      applySession(res.data);
+    },
+    [applySession],
   );
 
   const logout = useCallback(() => {
@@ -64,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/login");
   }, [router]);
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, signup, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

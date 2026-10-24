@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import { useAuth } from "@/lib/auth-context";
 import { apiErrorMessage } from "@/lib/api";
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const [email, setEmail] = useState("admin@medidispense.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -31,9 +32,9 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 p-8 shadow-sm"
       >
-        <h1 className="text-lg font-semibold mb-1">MediDispense Admin</h1>
+        <h1 className="text-lg font-semibold mb-1">MediDispense</h1>
         <p className="text-sm text-black/50 dark:text-white/50 mb-6">
-          Hospital admin sign-in for the smart medicine dispensing system.
+          Sign in — patients, doctors, and staff all use the same page.
         </p>
 
         <label className="block text-sm mb-1" htmlFor="email">
@@ -70,8 +71,15 @@ export default function LoginPage() {
           {submitting ? "Signing in…" : "Sign in"}
         </button>
 
+        <p className="text-sm text-center text-black/60 dark:text-white/60 mt-5">
+          New patient?{" "}
+          <Link href="/signup" className="text-blue-600 dark:text-blue-400 hover:underline">
+            Sign up
+          </Link>
+        </p>
+
         <p className="text-xs text-black/40 dark:text-white/40 mt-4">
-          Default seed account: admin@medidispense.com / admin123 (change it after first login).
+          Default seed admin account: admin@medidispense.com / admin123.
         </p>
       </form>
     </div>

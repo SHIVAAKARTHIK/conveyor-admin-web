@@ -116,6 +116,37 @@ export interface AlertOut {
   resolved_at: string | null;
 }
 
+export interface DoctorOut {
+  id: string;
+  name: string;
+  department: string | null;
+  is_available: boolean;
+}
+
+export interface MedicineCreate {
+  name: string;
+  dosage: string;
+  form: string;
+  qty: number;
+}
+
+export interface PrescriptionCreate {
+  patient_id: string;
+  notes: string | null;
+  medicines: MedicineCreate[];
+  consultation_id: string | null;
+}
+
+export interface PatientSignupRequest {
+  name: string;
+  age: number;
+  gender: string;
+  bed_no: string;
+  email: string;
+  password: string;
+  phone?: string | null;
+}
+
 export interface ReportSummary {
   deliveries_per_day: { day: string; count: number }[];
   avg_delivery_seconds: number | null;

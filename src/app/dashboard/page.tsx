@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ProtectedPage } from "@/components/ProtectedPage";
 import { StatTile } from "@/components/StatTile";
 import { Badge } from "@/components/Badge";
+import { HardwareControl } from "@/components/HardwareControl";
 import { api, apiErrorMessage } from "@/lib/api";
 import { useLiveChannel } from "@/lib/use-live-channel";
 import type { AlertOut, ConveyorStatusOut, DeliveryOut, MotorStatus } from "@/lib/types";
@@ -111,6 +112,8 @@ function DashboardContent() {
         </div>
         {simError && <p className="text-sm text-red-600 dark:text-red-400 mt-3">{simError}</p>}
       </section>
+
+      <HardwareControl />
 
       <section className="rounded-xl border border-black/10 dark:border-white/10 p-5 bg-white/60 dark:bg-white/5">
         <h2 className="font-medium mb-4">Active deliveries</h2>
