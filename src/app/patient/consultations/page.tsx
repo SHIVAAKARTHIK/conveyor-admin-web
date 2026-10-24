@@ -41,7 +41,7 @@ function MyConsultationsContent() {
 
       {consultations.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-sm text-black/50 dark:text-white/50 mb-4">You haven't requested a consultation yet.</p>
+          <p className="text-sm text-black/50 dark:text-white/50 mb-4">You haven&apos;t requested a consultation yet.</p>
           <Link href="/patient/find-doctor" className="text-blue-600 dark:text-blue-400 hover:underline text-sm">
             Find a doctor
           </Link>

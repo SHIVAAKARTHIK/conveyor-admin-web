@@ -54,7 +54,7 @@ function FindDoctorContent() {
       <div className="max-w-lg mx-auto px-4 py-16 text-center space-y-4">
         <h1 className="text-xl font-semibold">Request sent</h1>
         <p className="text-sm text-black/60 dark:text-white/60">
-          {selectedDoctor?.name} has been notified. You'll see it update once they accept.
+          {selectedDoctor?.name} has been notified. You&apos;ll see it update once they accept.
         </p>
         <button
           onClick={() => router.push("/patient/consultations")}
@@ -81,7 +81,7 @@ function FindDoctorContent() {
 
         <form onSubmit={handleRequest} className="space-y-3">
           <label className="block text-sm mb-1" htmlFor="complaint">
-            What's going on?
+            What&apos;s going on?
           </label>
           <textarea
             id="complaint"

@@ -24,6 +24,22 @@ function PatientHomeContent() {
   const [patient, setPatient] = useState<PatientOut | null>(null);
   const [deliveries, setDeliveries] = useState<DeliveryOut[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [receivingId, setReceivingId] = useState<string | null>(null);
+
+  // The patient closes the loop themselves once the box is at their bed - this
+  // replaces the nurse's bedside QR scan in the web-only build.
+  async function confirmReceived(id: string) {
+    setReceivingId(id);
+    setError(null);
+    try {
+      await api.post(`/deliveries/${id}/receive`);
+      await load();
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setReceivingId(null);
+    }
+  }
 
   async function load() {
     try {
@@ -84,7 +100,18 @@ function PatientHomeContent() {
                     {d.medicines.map((m) => m.name).join(", ") || "Medicine details pending"}
                   </p>
                 </div>
-                <Badge value={d.status} />
+                <div className="flex items-center gap-3 shrink-0">
+                  {d.status === "arrived" && (
+                    <button
+                      onClick={() => confirmReceived(d.id)}
+                      disabled={receivingId === d.id}
+                      className="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-medium"
+                    >
+                      {receivingId === d.id ? "Saving…" : "I received it"}
+                    </button>
+                  )}
+                  <Badge value={d.status} />
+                </div>
               </li>
             ))}
           </ul>
@@ -94,7 +121,7 @@ function PatientHomeContent() {
       <section className="rounded-xl border border-black/10 dark:border-white/10 p-5 bg-white/60 dark:bg-white/5">
         <h2 className="font-medium mb-2">Need to see a doctor?</h2>
         <p className="text-sm text-black/50 dark:text-white/50 mb-4">
-          Browse by speciality and send a request — they'll accept it and prescribe from there.
+          Browse by speciality and send a request — they&apos;ll accept it and prescribe from there.
         </p>
         <Link
           href="/patient/find-doctor"

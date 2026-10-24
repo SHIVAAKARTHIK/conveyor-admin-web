@@ -8,11 +8,13 @@ import { Badge } from "@/components/Badge";
 import { HardwareControl } from "@/components/HardwareControl";
 import { api, apiErrorMessage } from "@/lib/api";
 import { useLiveChannel } from "@/lib/use-live-channel";
-import type { AlertOut, ConveyorStatusOut, MotorStatus } from "@/lib/types";
+import type { AlertOut, ConveyorStatusOut, DeliveryOut, MotorStatus } from "@/lib/types";
 
 function TechnicianContent() {
   const [conveyor, setConveyor] = useState<ConveyorStatusOut | null>(null);
   const [alerts, setAlerts] = useState<AlertOut[]>([]);
+  const [deliveries, setDeliveries] = useState<DeliveryOut[]>([]);
+  const [busyDeliveryId, setBusyDeliveryId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [simulating, setSimulating] = useState(false);
@@ -24,12 +26,14 @@ function TechnicianContent() {
 
   const loadAll = useCallback(async () => {
     try {
-      const [c, a] = await Promise.all([
+      const [c, a, d] = await Promise.all([
         api.get<ConveyorStatusOut>("/conveyor/status"),
         api.get<AlertOut[]>("/alerts"),
+        api.get<DeliveryOut[]>("/deliveries"),
       ]);
       setConveyor(c.data);
       setAlerts(a.data);
+      setDeliveries(d.data);
     } catch (err) {
       setError(apiErrorMessage(err));
     }
@@ -43,6 +47,7 @@ function TechnicianContent() {
   // jam reported from anywhere shows up here within the same second.
   useLiveChannel("conveyor", () => {
     api.get<ConveyorStatusOut>("/conveyor/status").then((r) => setConveyor(r.data));
+    api.get<DeliveryOut[]>("/deliveries").then((r) => setDeliveries(r.data));
   });
   useLiveChannel("alerts", () => {
     api.get<AlertOut[]>("/alerts").then((r) => setAlerts(r.data));
@@ -61,6 +66,21 @@ function TechnicianContent() {
       setSimError(apiErrorMessage(err));
     } finally {
       setSimulating(false);
+    }
+  }
+
+  // Closes a delivery that will never finish (emergency stop, box never arrived,
+  // or a leftover job). Without this a stopped run stays "in transit" forever.
+  async function failDelivery(id: string) {
+    if (!window.confirm("Mark this delivery as failed? The prescription will also be marked failed.")) return;
+    setBusyDeliveryId(id);
+    try {
+      await api.post(`/deliveries/${id}/fail`);
+      await loadAll();
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setBusyDeliveryId(null);
     }
   }
 
@@ -88,6 +108,9 @@ function TechnicianContent() {
     }
   }
 
+  const openDeliveries = deliveries.filter(
+    (d) => d.status === "preparing" || d.status === "verifying" || d.status === "in_transit",
+  );
   const openAlerts = alerts.filter((a) => a.status === "open");
   const acknowledgedAlerts = alerts.filter((a) => a.status === "acknowledged");
   const resolvedAlerts = alerts.filter((a) => a.status === "resolved");
@@ -157,6 +180,44 @@ function TechnicianContent() {
       </section>
 
       <HardwareControl />
+
+      <section className="rounded-xl border border-black/10 dark:border-white/10 p-5 bg-white/60 dark:bg-white/5">
+        <h2 className="font-medium mb-1">Deliveries in progress ({openDeliveries.length})</h2>
+        <p className="text-sm text-black/50 dark:text-white/50 mb-4">
+          Waiting or on the belt. If a run was stopped or a box never arrived, mark it failed to clear it.
+        </p>
+        {openDeliveries.length === 0 ? (
+          <p className="text-sm text-black/50 dark:text-white/50">Nothing in progress.</p>
+        ) : (
+          <ul className="space-y-3">
+            {openDeliveries.map((d) => (
+              <li
+                key={d.id}
+                className="flex items-center justify-between gap-4 rounded-lg border border-black/5 dark:border-white/10 p-3"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Badge value={d.status} />
+                    <span className="text-sm">
+                      {d.patient_name ?? "Patient"} — Bed {d.patient_bed_no ?? d.bed_no ?? "?"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-black/50 dark:text-white/50">
+                    {d.medicines.map((m) => m.name).join(", ") || "Medicine details pending"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => failDelivery(d.id)}
+                  disabled={busyDeliveryId === d.id}
+                  className="shrink-0 px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-800 text-red-700 dark:text-red-400 text-sm disabled:opacity-50"
+                >
+                  Mark failed
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="rounded-xl border border-black/10 dark:border-white/10 p-5 bg-white/60 dark:bg-white/5">
         <h2 className="font-medium mb-4">Open ({openAlerts.length})</h2>
