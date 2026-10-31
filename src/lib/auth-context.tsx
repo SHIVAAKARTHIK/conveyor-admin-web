@@ -33,7 +33,7 @@ export const ROLE_HOME: Record<UserRole, string> = {
   admin: "/dashboard",
   doctor: "/doctor",
   technician: "/technician",
-  nurse: "/dashboard",
+  nurse: "/nurse",
   pharmacist: "/dashboard",
   patient: "/patient",
 };

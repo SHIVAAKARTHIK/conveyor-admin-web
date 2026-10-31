@@ -26,6 +26,7 @@ const LINKS_BY_ROLE: Partial<Record<UserRole, { href: string; label: string }[]>
   ],
   doctor: [{ href: "/doctor", label: "Consultations" }],
   technician: [{ href: "/technician", label: "Conveyor" }],
+  nurse: [{ href: "/nurse", label: "Bedside confirmation" }],
 };
 
 export function NavBar() {
