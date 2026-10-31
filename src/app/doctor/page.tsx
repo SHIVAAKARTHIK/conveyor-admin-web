@@ -6,6 +6,7 @@ import { ProtectedPage } from "@/components/ProtectedPage";
 import { Badge } from "@/components/Badge";
 import { useAuth } from "@/lib/auth-context";
 import { api, apiErrorMessage } from "@/lib/api";
+import { bedLabel } from "@/lib/bed";
 import { useLiveChannel } from "@/lib/use-live-channel";
 import type { ConsultationOut, DeliveryOut, MedicineCreate, PatientOut, UserOut } from "@/lib/types";
 
@@ -159,7 +160,7 @@ function DoctorContent() {
               >
                 <div>
                   <p className="text-sm font-medium">
-                    {c.patient_name} — Bed {c.patient_bed_no}
+                    {c.patient_name} — {bedLabel(c.patient_bed_no)}
                   </p>
                   <p className="text-sm text-black/60 dark:text-white/60">{c.complaint}</p>
                 </div>
@@ -189,7 +190,7 @@ function DoctorContent() {
               >
                 <div>
                   <p className="text-sm font-medium">
-                    {c.patient_name} — Bed {c.patient_bed_no}
+                    {c.patient_name} — {bedLabel(c.patient_bed_no)}
                   </p>
                   <p className="text-sm text-black/60 dark:text-white/60">{c.complaint}</p>
                 </div>
@@ -212,7 +213,7 @@ function DoctorContent() {
             {completed.map((c) => (
               <li key={c.id} className="flex items-center justify-between text-sm">
                 <span>
-                  {c.patient_name} — Bed {c.patient_bed_no}: {c.complaint}
+                  {c.patient_name} — {bedLabel(c.patient_bed_no)}: {c.complaint}
                 </span>
                 <Badge value={c.status} />
               </li>
@@ -233,7 +234,7 @@ function DoctorContent() {
             {deliveries.slice(0, 8).map((d) => (
               <li key={d.id} className="flex items-center justify-between gap-4 text-sm">
                 <span>
-                  {d.patient_name ?? "Patient"} — Bed {d.patient_bed_no ?? d.bed_no ?? "?"}
+                  {d.patient_name ?? "Patient"} — {bedLabel(d.patient_bed_no ?? d.bed_no)}
                   {d.medicines.length > 0 && (
                     <span className="text-black/50 dark:text-white/50">
                       {" "}
@@ -264,7 +265,7 @@ function DoctorContent() {
               {patients.map((p) => (
                 <tr key={p.id} className="border-t border-black/5 dark:border-white/10">
                   <td className="py-2 pr-4">{p.name}</td>
-                  <td className="py-2 pr-4">{p.bed_no}</td>
+                  <td className="py-2 pr-4">{p.bed_no || "—"}</td>
                   <td className="py-2 pr-4">{p.age}</td>
                   <td className="py-2 pr-4">{p.gender}</td>
                 </tr>
@@ -286,7 +287,7 @@ function DoctorContent() {
           >
             <h2 className="text-lg font-semibold mb-1">Prescribe</h2>
             <p className="text-sm text-black/50 dark:text-white/50 mb-4">
-              {prescribeFor.patient_name} — Bed {prescribeFor.patient_bed_no}
+              {prescribeFor.patient_name} — {bedLabel(prescribeFor.patient_bed_no)}
             </p>
 
             <div className="space-y-3 mb-3">

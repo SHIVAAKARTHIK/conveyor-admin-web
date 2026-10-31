@@ -37,8 +37,8 @@ const MODE_TEXT: Record<string, string> = {
 function jobSummary(s: DeviceStatus): string | null {
   if (s.mode !== "delivery" || !s.h6_state) return null;
   if (s.h6_state === "idle") return "Waiting for a prescription.";
-  if (s.h6_state === "loading") return `A box for Bed ${s.job_bed} is waiting. Load it and press the machine's button.`;
-  return `Delivering to Bed ${s.job_bed}…`;
+  if (s.h6_state === "loading") return `A box for Bed ${s.job_bed} is waiting. Load it, then press Dispatch (or the machine's button).`;
+  return `Delivering to Bed ${s.job_bed}… Stop belt acts as the emergency stop.`;
 }
 
 async function callDevice<T>(base: string, path: string, method: "GET" | "POST", timeoutMs: number): Promise<T> {
@@ -208,6 +208,16 @@ export function HardwareControl() {
       )}
 
       <div className="flex gap-2 flex-wrap">
+        {status?.mode === "delivery" && (
+          <button
+            onClick={() => send("Dispatch", "/dispatch")}
+            disabled={disabled || status.h6_state === "running"}
+            title="Starts the next waiting delivery, the same as pressing the machine's button"
+            className="px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium disabled:opacity-40"
+          >
+            {status.h6_state === "loading" ? `Dispatch Bed ${status.job_bed} box` : "Dispatch"}
+          </button>
+        )}
         <button
           onClick={() => send("Start belt", "/start")}
           disabled={disabled}

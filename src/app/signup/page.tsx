@@ -12,7 +12,6 @@ export default function SignupPage() {
     name: "",
     age: "",
     gender: "Male",
-    bed_no: "1",
     email: "",
     password: "",
     phone: "",
@@ -29,7 +28,6 @@ export default function SignupPage() {
         name: form.name,
         age: Number(form.age),
         gender: form.gender,
-        bed_no: form.bed_no,
         email: form.email,
         password: form.password,
         phone: form.phone || null,
@@ -49,7 +47,7 @@ export default function SignupPage() {
       >
         <h1 className="text-lg font-semibold mb-1">Check in</h1>
         <p className="text-sm text-black/50 dark:text-white/50 mb-6">
-          Create your account and pick your bed — no staff needed to get started.
+          Create your account. A nurse will assign your bed when you are settled in.
         </p>
 
         <label className="block text-sm mb-1" htmlFor="name">
@@ -94,19 +92,6 @@ export default function SignupPage() {
             </select>
           </div>
         </div>
-
-        <label className="block text-sm mb-1" htmlFor="bed">
-          Bed
-        </label>
-        <select
-          id="bed"
-          value={form.bed_no}
-          onChange={(e) => setForm({ ...form, bed_no: e.target.value })}
-          className="w-full mb-4 rounded-lg border border-black/15 dark:border-white/15 bg-transparent px-3 py-2 text-sm"
-        >
-          <option value="1">Bed 1</option>
-          <option value="2">Bed 2</option>
-        </select>
 
         <label className="block text-sm mb-1" htmlFor="phone">
           Phone (optional)

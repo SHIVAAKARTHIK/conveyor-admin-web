@@ -11,6 +11,9 @@ import type { DeliveryOut, PatientOut, PrescriptionOut } from "@/lib/types";
 
 function NurseContent() {
   const [deliveries, setDeliveries] = useState<DeliveryOut[]>([]);
+  const [patients, setPatients] = useState<PatientOut[]>([]);
+  const [bedChoice, setBedChoice] = useState<Record<string, string>>({});
+  const [assigningId, setAssigningId] = useState<string | null>(null);
   const [codes, setCodes] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -18,8 +21,9 @@ function NurseContent() {
 
   const loadDeliveries = useCallback(async () => {
     try {
-      const res = await api.get<DeliveryOut[]>("/deliveries");
+      const [res, pts] = await Promise.all([api.get<DeliveryOut[]>("/deliveries"), api.get<PatientOut[]>("/patients")]);
       setDeliveries(res.data);
+      setPatients(pts.data);
     } catch (err) {
       setError(apiErrorMessage(err));
     }
@@ -49,6 +53,31 @@ function NurseContent() {
     }
   }
 
+  async function assignBed(p: PatientOut) {
+    const bed = bedChoice[p.id] ?? p.bed_no;
+    if (bed !== "1" && bed !== "2") {
+      setError("Choose Bed 1 or Bed 2 first.");
+      return;
+    }
+    setAssigningId(p.id);
+    setError(null);
+    setNotice(null);
+    try {
+      await api.patch(`/patients/${p.id}/bed`, { bed_no: bed });
+      setNotice(`${p.name} is now in Bed ${bed}.`);
+      setBedChoice((c) => {
+        const next = { ...c };
+        delete next[p.id];
+        return next;
+      });
+      await loadDeliveries();
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setAssigningId(null);
+    }
+  }
+
   async function confirm(d: DeliveryOut) {
     const code = (codes[d.id] ?? "").trim();
     if (!code) {
@@ -70,6 +99,9 @@ function NurseContent() {
     }
   }
 
+  // Patients with no bed come first: nothing can be prescribed for them until a nurse places them.
+  const sortedPatients = [...patients].sort((a, b) => Number(Boolean(a.bed_no)) - Number(Boolean(b.bed_no)));
+  const withoutBed = patients.filter((p) => !p.bed_no).length;
   const arrived = deliveries.filter((d) => d.status === "arrived");
   const onTheWay = deliveries.filter((d) => d.status === "preparing" || d.status === "verifying" || d.status === "in_transit");
   const recent = deliveries
@@ -93,11 +125,65 @@ function NurseContent() {
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       {notice && <p className="text-sm text-green-700 dark:text-green-400">{notice}</p>}
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatTile label="Need a bed" value={withoutBed} hint={withoutBed > 0 ? "Assign below" : "Everyone has a bed"} />
         <StatTile label="Ready to confirm" value={arrived.length} hint={arrived.length > 0 ? "At the bed now" : "None waiting"} />
         <StatTile label="On the way" value={onTheWay.length} />
         <StatTile label="Confirmed (latest)" value={recent.length} />
       </div>
+
+      <section className="rounded-xl border border-black/10 dark:border-white/10 p-5 bg-white/60 dark:bg-white/5">
+        <h2 className="font-medium mb-1">Patients and beds ({patients.length})</h2>
+        <p className="text-sm text-black/50 dark:text-white/50 mb-4">
+          Put each patient in Bed 1 or Bed 2. The bed decides where the conveyor sends their medicine, and a doctor
+          cannot prescribe until a patient has one. A bed cannot be changed while that patient&apos;s box is on the belt.
+        </p>
+        {patients.length === 0 ? (
+          <p className="text-sm text-black/50 dark:text-white/50">No patients yet.</p>
+        ) : (
+          <ul className="space-y-2">
+            {sortedPatients.map((p) => {
+              const choice = bedChoice[p.id] ?? p.bed_no;
+              const changed = choice !== p.bed_no;
+              return (
+                <li
+                  key={p.id}
+                  className={`flex items-center gap-3 flex-wrap rounded-lg border p-3 ${
+                    p.bed_no
+                      ? "border-black/5 dark:border-white/10"
+                      : "border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30"
+                  }`}
+                >
+                  <div className="flex-1 min-w-40">
+                    <div className="text-sm font-medium">{p.name}</div>
+                    <div className="text-xs text-black/50 dark:text-white/50">
+                      {p.age} yrs · {p.gender} · {p.bed_no ? `Bed ${p.bed_no}` : "no bed yet"}
+                    </div>
+                  </div>
+                  <select
+                    value={choice}
+                    onChange={(e) => setBedChoice((c) => ({ ...c, [p.id]: e.target.value }))}
+                    aria-label={`Bed for ${p.name}`}
+                    className="rounded-lg border border-black/15 dark:border-white/15 bg-white dark:bg-black/30 px-3 py-1.5 text-sm"
+                  >
+                    {!p.bed_no && <option value="">Choose a bed…</option>}
+                    {p.bed_no && p.bed_no !== "1" && p.bed_no !== "2" && <option value={p.bed_no}>Bed {p.bed_no} (current)</option>}
+                    <option value="1">Bed 1</option>
+                    <option value="2">Bed 2</option>
+                  </select>
+                  <button
+                    onClick={() => assignBed(p)}
+                    disabled={assigningId === p.id || !changed || (choice !== "1" && choice !== "2")}
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-sm font-medium"
+                  >
+                    {p.bed_no ? "Move" : "Assign"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
       <section className="rounded-xl border border-black/10 dark:border-white/10 p-5 bg-white/60 dark:bg-white/5">
         <h2 className="font-medium mb-1">Ready to confirm ({arrived.length})</h2>

@@ -67,7 +67,7 @@ function PatientHomeContent() {
           {patient ? `Hi, ${patient.name}` : "Welcome"}
         </h1>
         <p className="text-sm text-black/50 dark:text-white/50">
-          {patient ? `Bed ${patient.bed_no}` : "Loading your details…"}
+          {patient ? (patient.bed_no ? `Bed ${patient.bed_no}` : "Waiting for a nurse to assign your bed") : "Loading your details…"}
         </p>
       </div>
 

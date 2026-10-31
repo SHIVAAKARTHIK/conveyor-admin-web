@@ -141,7 +141,6 @@ export interface PatientSignupRequest {
   name: string;
   age: number;
   gender: string;
-  bed_no: string;
   email: string;
   password: string;
   phone?: string | null;
