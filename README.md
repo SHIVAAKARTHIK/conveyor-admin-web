@@ -55,7 +55,7 @@ default) leaves the board's saved settings alone, which is right for an update.
 After the firmware changes, rebuild the files from the firmware repo:
 
 ```bash
-powershell -ExecutionPolicy Bypass -File .lash.ps1 -Export ..\conveyor-admin-web\publicirmware
+powershell -ExecutionPolicy Bypass -File .\flash.ps1 -Export ..\conveyor-admin-web\public\firmware
 ```
 
 ## Checks
