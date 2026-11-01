@@ -255,6 +255,22 @@ export function HardwareControl() {
         </button>
       </div>
 
+      {reachable === false && (
+        <div className="mt-4 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 text-sm">
+          <p className="font-medium mb-1">Conveyor not reachable? Set it up</p>
+          <ol className="list-decimal pl-5 space-y-1 text-black/70 dark:text-white/70">
+            <li>Check the conveyor board has power (USB) and that this computer is on the same WiFi.</li>
+            <li>
+              A new board, or one whose WiFi changed, opens its own WiFi called <b>MediDispense-Setup</b> (password{" "}
+              <code>medidispense</code>). Join it from a phone or laptop and open <b>http://192.168.4.1</b>.
+            </li>
+            <li>Choose your WiFi, enter the backend computer&apos;s name and the conveyor&apos;s login, then press Save. The board restarts and joins.</li>
+            <li>To open that page on purpose, hold the machine&apos;s push button for 3 seconds while powering it on.</li>
+            <li>If the board is online but the name does not work, enter its IP address under Conveyor address below.</li>
+          </ol>
+        </div>
+      )}
+
       {busy && <p className="text-sm text-black/50 dark:text-white/50 mt-3">Sending: {busy}…</p>}
       {message && !busy && <p className="text-sm text-green-700 dark:text-green-400 mt-3">{message}</p>}
       {error && <p className="text-sm text-red-600 dark:text-red-400 mt-3">{error}</p>}
