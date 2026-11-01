@@ -1,62 +1,51 @@
-# MediDispense Admin (Next.js)
+# MediDispense web app (Next.js)
 
-Hospital admin dashboard for the IoT-Based Automated Medicine Dispensing
-Conveyor System project. Talks to the FastAPI backend in `../backend` over
-REST + WebSocket.
+The one web app for every role: patient, doctor, nurse, technician and admin.
+It talks to the FastAPI backend ([conveyor-backend](https://github.com/SHIVAAKARTHIK/conveyor-backend))
+over REST and WebSocket, and controls the ESP32 conveyor directly over the local
+network ([conveyor-firmware-](https://github.com/SHIVAAKARTHIK/conveyor-firmware-)).
+The full setup guide, report and wiring are in [conveyor-docs](https://github.com/SHIVAAKARTHIK/conveyor-docs).
 
 ## Quickstart
 
-Make sure the backend is running first (see `../backend/README.md`), then:
+Needs Node.js 20 or newer (developed on 22) and the backend running first.
 
 ```bash
 cd admin-web
 npm install
-cp .env.example .env.local   # defaults already point at http://localhost:8000
+copy .env.example .env.local     # macOS/Linux: cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000 — you'll land on `/login`.
+Open http://localhost:3000. `.env.local` already points at the backend on
+`http://localhost:8000`. If the backend runs on another computer, put that
+computer's address there, and add this site's address to the backend's
+`CORS_ORIGINS`.
 
-Default seed login (created automatically by the backend on first run):
-**admin@medidispense.com / admin123**
+Sign in with a demo account (the backend's `seed_demo.py` creates them; the
+logins are listed in the setup guide). A patient registers with **Sign up**.
 
-Only accounts with the `admin` role can sign into this site — doctors,
-nurses, pharmacists, and technicians use the Android app instead.
+## What each role sees
 
-## Pages
+| Role | Pages |
+|---|---|
+| Patient | Home (their deliveries, "I received it"), Find a Doctor, My Consultations |
+| Doctor | Consultations: Available/Busy switch, accept requests, prescribe, live delivery status |
+| Nurse | Bedside confirmation: assign Bed 1 or 2 to patients, confirm arrived deliveries with the wristband code |
+| Technician | Conveyor: live hardware control (Dispatch, Start/Stop belt, Push Bed 1/2, Beep), deliveries in progress, alerts |
+| Admin | Dashboard, Patients, Staff, Prescriptions and Deliveries, Consultations, Alerts, Reports |
 
-- `/login` — admin sign-in
-- `/dashboard` — live tiles (active deliveries, open alerts, conveyor status,
-  today's count) + a conveyor simulator panel standing in for the real
-  ESP32/IR-sensor hardware
-- `/patients` — register patients, view/print their QR code
-- `/users` — create/remove doctor/nurse/pharmacist/technician/admin accounts
-- `/prescriptions` — every prescription + its delivery pipeline, expandable
-  to see the full stage-by-stage timeline
-- `/alerts` — medicine-mismatch and conveyor-failure alerts, acknowledge/resolve
-- `/reports` — deliveries/day and alerts-by-type charts (recharts)
+## Hardware control panel
 
-## Live updates
+The technician page and the admin dashboard show **Live hardware control**. The
+browser calls the conveyor's own small web server (`http://conveyor.local`) on
+the local network, so the computer running the browser must be on the same
+WiFi as the conveyor. If `conveyor.local` does not resolve, open **Conveyor
+address** on the panel and enter the board's IP address.
 
-The dashboard, alerts, and prescriptions pages subscribe to the backend's
-`/ws/conveyor`, `/ws/alerts`, and `/ws/prescriptions` WebSocket channels
-(see `src/lib/use-live-channel.ts`) and refetch the relevant data the moment
-the backend broadcasts an event — no polling.
-
-## Build
+## Checks
 
 ```bash
-npm run build
-npm run start
+npx tsc --noEmit
+npm run lint
 ```
-
-## Notes
-
-- Auth: JWT from `/auth/login` is stored in `localStorage` and attached to
-  every API request via an axios interceptor (`src/lib/api.ts`). This is an
-  MVP choice; for a hardened deployment, move to an httpOnly cookie set by a
-  Next.js route handler instead.
-- Two ESLint rules (`react-hooks/set-state-in-effect`, `react-hooks/refs`)
-  are downgraded to warnings in `eslint.config.mjs` — they're new
-  React-Compiler-prep rules that flag the plain fetch-in-effect and
-  ref-holds-latest-callback patterns used throughout this app.
