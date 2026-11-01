@@ -1,0 +1,27 @@
+﻿{
+    "name":  "MediDispense conveyor firmware",
+    "chip":  "ESP32",
+    "version":  "2026-11-01-231b02b",
+    "files":  [
+                  {
+                      "path":  "bootloader.bin",
+                      "address":  4096,
+                      "size":  24992
+                  },
+                  {
+                      "path":  "partitions.bin",
+                      "address":  32768,
+                      "size":  3072
+                  },
+                  {
+                      "path":  "boot_app0.bin",
+                      "address":  57344,
+                      "size":  8192
+                  },
+                  {
+                      "path":  "firmware.bin",
+                      "address":  65536,
+                      "size":  1132160
+                  }
+              ]
+}

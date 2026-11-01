@@ -18,6 +18,7 @@ const LINKS_BY_ROLE: Partial<Record<UserRole, { href: string; label: string }[]>
     { href: "/consultations", label: "Consultations" },
     { href: "/alerts", label: "Alerts" },
     { href: "/reports", label: "Reports" },
+    { href: "/flasher", label: "Install firmware" },
   ],
   patient: [
     { href: "/patient", label: "Home" },
@@ -25,7 +26,10 @@ const LINKS_BY_ROLE: Partial<Record<UserRole, { href: string; label: string }[]>
     { href: "/patient/consultations", label: "My Consultations" },
   ],
   doctor: [{ href: "/doctor", label: "Consultations" }],
-  technician: [{ href: "/technician", label: "Conveyor" }],
+  technician: [
+    { href: "/technician", label: "Conveyor" },
+    { href: "/flasher", label: "Install firmware" },
+  ],
   nurse: [{ href: "/nurse", label: "Bedside confirmation" }],
 };
 

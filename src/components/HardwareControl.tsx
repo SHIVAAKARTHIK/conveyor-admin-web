@@ -266,6 +266,9 @@ export function HardwareControl() {
             </li>
             <li>Choose your WiFi, enter the backend computer&apos;s name and the conveyor&apos;s login, then press Save. The board restarts and joins.</li>
             <li>To open that page on purpose, hold the machine&apos;s push button for 3 seconds while powering it on.</li>
+            <li>
+              A brand-new board with no firmware yet? <a href="/flasher" className="text-blue-600 dark:text-blue-400 underline">Install the firmware from this browser</a>.
+            </li>
             <li>If the board is online but the name does not work, enter its IP address under Conveyor address below.</li>
           </ol>
         </div>
